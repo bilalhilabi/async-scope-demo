@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="0421cd76-0cda-4f8c-8535-d38c88aeaa94" >
+		<http:listener-connection host="0.0.0.0" port="8083" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="2418b727-20b3-491c-865e-d3be9a439137" />
+	<flow name="async-scope-demoFlow" doc:id="fa28bde3-1909-4fe5-90e1-22982868a3d4" >
+		<http:listener doc:name="Listener" doc:id="352ce010-14ff-4106-878a-2898641b148a" config-ref="HTTP_Listener_config" path="/async"/>
+		<logger level="INFO" doc:name="Logger 1" doc:id="793ea7d0-fe6c-4269-881f-7bd953078301" message="first"/>
+		<async doc:name="Async" doc:id="9e834db7-98ef-4f5a-b0d6-e685c1c2efcd" >
+			<flow-ref doc:name="Flow Reference" doc:id="210184e0-368b-4b35-b75e-ec0f04670694" name="async-scope-demoFlow1"/>
+		</async>
+		<logger level="INFO" doc:name="Logger 4" doc:id="525563cf-3e0f-4d4a-80af-ab0acc23d5cd" message="fourth"/>
+		<set-payload value='#["first flow completetd"]' doc:name="Set Payload 1" doc:id="eb171c3d-f9b5-43cb-a1cf-3596a30f358d" />
+	</flow>
+	<flow name="async-scope-demoFlow1" doc:id="45d7bd0d-a4d8-406d-9c82-f70587b75b33" >
+		<logger level="INFO" doc:name="Logger1" doc:id="455bfe11-8cc7-4e98-bd05-3a49c1fee264" message="async 1" />
+		<logger level="INFO" doc:name="Logger 2" doc:id="c4062e39-1e36-4ba9-9b42-47f9284fd48c" message="async 2" />
+		<set-payload value='#["Second flow completetd"]' doc:name="Set Payload" doc:id="74da749a-d5b3-495f-a290-5bda834c412a" />
+	</flow>
+	<flow name="async-scope-demoFlow2" doc:id="80e6ae43-e3ce-4894-bb5b-91322fb55c3c" >
+		<http:listener doc:name="Listener" doc:id="358295dc-8ed3-4c6b-a1ee-f8cb0c234d43" config-ref="HTTP_Listener_config" path="/example2"/>
+		<logger level="INFO" doc:name="Logger 1" doc:id="d7ee190a-7d74-4de1-8c1a-61627b290895" message='#["first"]' category="Logger 1"/>
+		<logger level="INFO" doc:name="Logger 2" doc:id="56ee59cc-bc0d-4f64-a8da-ba653aca8ed9" message='#["second"]' category="Logger 2"/>
+		<async doc:name="Async" doc:id="84597644-d134-4182-a768-e22e9fb16b0a" >
+			<ee:transform doc:name="Transform Message" doc:id="e64a826c-d425-46a7-a6cd-dc255d1f1ffa">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"name":payload.name
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<file:write doc:name="Write" doc:id="b1f5b115-74ab-49d6-a29a-7e1cb67fb58a" config-ref="File_Config" path="C:\flowFiles\witeNames\names.txt">
+				<file:content ><![CDATA[#[payload.name]]]></file:content>
+			</file:write>
+		</async>
+		<logger level="INFO" doc:name="Logger" doc:id="04bc6590-41d4-4f41-ad5b-8aa3664f2b4c" />
+		<set-payload value='#["Message from main flow "]' doc:name="Show Message" doc:id="d5b0dc5e-df2d-47de-bf74-184c4c573744" />
+	</flow>
+</mule>
